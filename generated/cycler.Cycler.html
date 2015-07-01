@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cycler.Cycler &mdash; cycler 0.9.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.9.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="cycler 0.9.0 documentation" href="../index.html" />
+    <link rel="prev" title="cycler.cycler" href="cycler.cycler.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="cycler.cycler.html" title="cycler.cycler"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cycler 0.9.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cycler-cycler">
+<h1>cycler.Cycler<a class="headerlink" href="#cycler-cycler" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="cycler.Cycler">
+<em class="property">class </em><code class="descclassname">cycler.</code><code class="descname">Cycler</code><span class="sig-paren">(</span><em>left</em>, <em>right=None</em>, <em>op=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cycler.html#Cycler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cycler.Cycler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Composable cycles</p>
+<p>This class has compositions methods:</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">+</span></code></dt>
+<dd>for &#8216;inner&#8217; products (zip)</dd>
+<dt><code class="docutils literal"><span class="pre">+=</span></code></dt>
+<dd>in-place <code class="docutils literal"><span class="pre">+</span></code></dd>
+<dt><code class="docutils literal"><span class="pre">*</span></code></dt>
+<dd>for outer products (itertools.product) and integer multiplication</dd>
+<dt><code class="docutils literal"><span class="pre">*=</span></code></dt>
+<dd>in-place <code class="docutils literal"><span class="pre">*</span></code></dd>
+</dl>
+<p>and supports basic slicing via <code class="docutils literal"><span class="pre">[]</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>left</strong> : Cycler or None</p>
+<blockquote>
+<div><p>The &#8216;left&#8217; cycler</p>
+</div></blockquote>
+<p><strong>right</strong> : Cycler or None</p>
+<blockquote>
+<div><p>The &#8216;right&#8217; cycler</p>
+</div></blockquote>
+<p><strong>op</strong> : func or None</p>
+<blockquote class="last">
+<div><p>Function which composes the &#8216;left&#8217; and &#8216;right&#8217; cyclers.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="cycler.Cycler.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>left</em>, <em>right=None</em>, <em>op=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cycler.html#Cycler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cycler.Cycler.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semi-private init</p>
+<p>Do not use this directly, use <a class="reference internal" href="cycler.cycler.html#cycler.cycler" title="cycler.cycler"><code class="xref py py-obj docutils literal"><span class="pre">cycler</span></code></a> function instead.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#cycler.Cycler.__init__" title="cycler.Cycler.__init__"><code class="xref py py-obj docutils literal"><span class="pre">__init__</span></code></a>(left[,&nbsp;right,&nbsp;op])</td>
+<td>Semi-private init</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#cycler.Cycler.simplify" title="cycler.Cycler.simplify"><code class="xref py py-obj docutils literal"><span class="pre">simplify</span></code></a>()</td>
+<td>Simplify the Cycler</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#cycler.Cycler.keys" title="cycler.Cycler.keys"><code class="xref py py-obj docutils literal"><span class="pre">keys</span></code></a></td>
+<td>The keys this Cycler knows about</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="cycler.Cycler.keys">
+<code class="descname">keys</code><a class="headerlink" href="#cycler.Cycler.keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>The keys this Cycler knows about</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cycler.Cycler.simplify">
+<code class="descname">simplify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cycler.html#Cycler.simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cycler.Cycler.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplify the Cycler</p>
+<p>Returned as a composition using only sums (no multiplications)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>simple</strong> : Cycler</p>
+<blockquote class="last">
+<div><p>An equivalent cycler using only summation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="cycler.cycler.html"
+                        title="previous chapter">cycler.cycler</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/cycler.Cycler.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Matplotlib Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.3</a>
+      
+      |
+      <a href="../_sources/generated/cycler.Cycler.txt"
+          rel="nofollow">Page source</a></li>
+    </div>
+
+    
+
+    
+  </body>
+</html>

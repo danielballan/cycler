@@ -1,0 +1,396 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cycler &mdash; cycler 0.9.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.9.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="cycler 0.9.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cycler 0.9.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cycler</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span>
+                        <span class="n">unicode_literals</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="kn">import</span> <span class="nb">zip</span><span class="p">,</span> <span class="nb">reduce</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">mul</span><span class="p">,</span> <span class="n">add</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<span class="k">def</span> <span class="nf">_process_keys</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to compose cycler keys</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    left, right : Cycler or None</span>
+<span class="sd">        The cyclers to be composed</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    keys : set</span>
+<span class="sd">        The keys in the composition of the two cyclers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">l_key</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="n">keys</span> <span class="k">if</span> <span class="n">left</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">r_key</span> <span class="o">=</span> <span class="n">right</span><span class="o">.</span><span class="n">keys</span> <span class="k">if</span> <span class="n">right</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">l_key</span> <span class="o">&amp;</span> <span class="n">r_key</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Can not compose overlapping cycles&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">l_key</span> <span class="o">|</span> <span class="n">r_key</span>
+
+
+<div class="viewcode-block" id="Cycler"><a class="viewcode-back" href="../generated/cycler.Cycler.html#cycler.Cycler">[docs]</a><span class="k">class</span> <span class="nc">Cycler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Composable cycles</span>
+
+<span class="sd">    This class has compositions methods:</span>
+
+<span class="sd">    ``+``</span>
+<span class="sd">      for &#39;inner&#39; products (zip)</span>
+
+<span class="sd">    ``+=``</span>
+<span class="sd">      in-place ``+``</span>
+
+<span class="sd">    ``*``</span>
+<span class="sd">      for outer products (itertools.product) and integer multiplication</span>
+
+<span class="sd">    ``*=``</span>
+<span class="sd">      in-place ``*``</span>
+
+<span class="sd">    and supports basic slicing via ``[]``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    left : Cycler or None</span>
+<span class="sd">        The &#39;left&#39; cycler</span>
+
+<span class="sd">    right : Cycler or None</span>
+<span class="sd">        The &#39;right&#39; cycler</span>
+
+<span class="sd">    op : func or None</span>
+<span class="sd">        Function which composes the &#39;left&#39; and &#39;right&#39; cyclers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Cycler.__init__"><a class="viewcode-back" href="../generated/cycler.Cycler.html#cycler.Cycler.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Semi-private init</span>
+
+<span class="sd">        Do not use this directly, use `cycler` function instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="n">_process_keys</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_left</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The keys this Cycler knows about</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compose the &#39;left&#39; and &#39;right&#39; components of this cycle</span>
+<span class="sd">        with the proper operation (zip or product as of now)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">out</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_from_iter</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">itr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Class method to create &#39;base&#39; Cycler objects</span>
+<span class="sd">        that do not have a &#39;right&#39; or &#39;op&#39; and for which</span>
+<span class="sd">        the &#39;left&#39; object is not another Cycler.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        label : str</span>
+<span class="sd">            The property key.</span>
+
+<span class="sd">        itr : iterable</span>
+<span class="sd">            Finite length iterable of the property values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cycler : Cycler</span>
+<span class="sd">            New &#39;base&#39; `Cycler`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_left</span> <span class="o">=</span> <span class="nb">list</span><span class="p">({</span><span class="n">label</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">itr</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">label</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="c"># TODO : maybe add numpy style fancy slicing</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="n">trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="p">(</span><span class="n">cycler</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="n">trans</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Can only use slices with Cycler.__getitem__&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_left</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compose</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pair-wise combine two equal length cycles (zip)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : Cycler</span>
+<span class="sd">           The second Cycler</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Can only add equal length cycles, &quot;</span>
+                             <span class="s">&quot;not {0} and {1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">Cycler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="nb">zip</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Outer product of two cycles (`itertools.product`) or integer</span>
+<span class="sd">        multiplication.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : Cycler or int</span>
+<span class="sd">           The second Cycler or integer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Cycler</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Cycler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">product</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="p">(</span><span class="n">cycler</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="o">*</span><span class="n">other</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="n">trans</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">op_dict</span> <span class="o">=</span> <span class="p">{</span><span class="nb">zip</span><span class="p">:</span> <span class="nb">min</span><span class="p">,</span> <span class="n">product</span><span class="p">:</span> <span class="n">mul</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_left</span><span class="p">)</span>
+        <span class="n">l_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_left</span><span class="p">)</span>
+        <span class="n">r_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_right</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">op_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">](</span><span class="n">l_len</span><span class="p">,</span> <span class="n">r_len</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        In-place pair-wise combine two equal length cycles (zip)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : Cycler</span>
+<span class="sd">           The second Cycler</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">old_self</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="n">_process_keys</span><span class="p">(</span><span class="n">old_self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_left</span> <span class="o">=</span> <span class="n">old_self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="nb">zip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        In-place outer product of two cycles (`itertools.product`)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : Cycler</span>
+<span class="sd">           The second Cycler</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">old_self</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="n">_process_keys</span><span class="p">(</span><span class="n">old_self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_left</span> <span class="o">=</span> <span class="n">old_self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">product</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">op_map</span> <span class="o">=</span> <span class="p">{</span><span class="nb">zip</span><span class="p">:</span> <span class="s">&#39;+&#39;</span><span class="p">,</span> <span class="n">product</span><span class="p">:</span> <span class="s">&#39;*&#39;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">lab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">itr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">lab</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s">&quot;cycler({lab!r}, {itr!r})&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lab</span><span class="o">=</span><span class="n">lab</span><span class="p">,</span> <span class="n">itr</span><span class="o">=</span><span class="n">itr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">op_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">,</span> <span class="s">&#39;?&#39;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;({left!r} {op} {right!r})&quot;</span>
+            <span class="k">return</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_left</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_right</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_repr_html_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># an table showing the value of each key through a full cycle</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="s">&quot;&lt;table&gt;&quot;</span>
+        <span class="n">sorted_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sorted_keys</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="s">&quot;&lt;th&gt;{key!r}&lt;/th&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="s">&quot;&lt;tr&gt;&quot;</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sorted_keys</span><span class="p">:</span>
+                <span class="n">output</span> <span class="o">+=</span> <span class="s">&quot;&lt;td&gt;{val!r}&lt;/td&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="s">&quot;&lt;/tr&gt;&quot;</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s">&quot;&lt;/table&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal helper function which iterates through the</span>
+<span class="sd">        styles and returns a dict of lists instead of a list of</span>
+<span class="sd">        dicts.  This is needed for multiplying by integers and</span>
+<span class="sd">        for __getitem__</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trans : dict</span>
+<span class="sd">            dict of lists for the styles</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># TODO : sort out if this is a bottle neck, if there is a better way</span>
+        <span class="c"># and if we care.</span>
+
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span>
+        <span class="c"># change this to dict comprehension when drop 2.6</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span>  <span class="nb">list</span><span class="p">())</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+<div class="viewcode-block" id="Cycler.simplify"><a class="viewcode-back" href="../generated/cycler.Cycler.html#cycler.Cycler.simplify">[docs]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simplify the Cycler</span>
+
+<span class="sd">        Returned as a composition using only sums (no multiplications)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        simple : Cycler</span>
+<span class="sd">            An equivalent cycler using only summation&quot;&quot;&quot;</span>
+        <span class="c"># TODO: sort out if it is worth the effort to make sure this is</span>
+        <span class="c"># balanced.  Currently it is is</span>
+        <span class="c"># (((a + b) + c) + d) vs</span>
+        <span class="c"># ((a + b) + (c + d))</span>
+        <span class="c"># I would believe that there is some performance implications</span>
+
+        <span class="n">trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="p">(</span><span class="n">cycler</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="n">trans</span><span class="p">)))</span>
+
+</div></div>
+<div class="viewcode-block" id="cycler"><a class="viewcode-back" href="../generated/cycler.cycler.html#cycler.cycler">[docs]</a><span class="k">def</span> <span class="nf">cycler</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">itr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a new `Cycler` object from a property name and</span>
+<span class="sd">    iterable of values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str</span>
+<span class="sd">        The property key.</span>
+
+<span class="sd">    itr : iterable</span>
+<span class="sd">        Finite length iterable of the property values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cycler : Cycler</span>
+<span class="sd">        New `Cycler` for the given property</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">itr</span><span class="p">,</span> <span class="n">Cycler</span><span class="p">):</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">itr</span><span class="o">.</span><span class="n">keys</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Can not create Cycler from a multi-property Cycler&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">itr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lab</span> <span class="o">=</span> <span class="n">keys</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">itr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">lab</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">itr</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Cycler</span><span class="o">.</span><span class="n">_from_iter</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">itr</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Matplotlib Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.3</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
